@@ -1,0 +1,1 @@
+TICKER_TIME = 10
