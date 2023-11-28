@@ -1,6 +1,8 @@
+import argparse
 import logging
 import os
 import time
+import traceback
 from PerformanceTracker import PerformaceTracker
 from logger_setup import setup_logger
 from monitoring import Monitoring
@@ -17,6 +19,10 @@ def main():
     logging.info("Starting application")
     log = logging.getLogger("APP." + __name__)
 
+    parser = argparse.ArgumentParser(description='Configs file path')
+    parser.add_argument('-f', '--file', dest='config_file',
+                   help='Config file path', default="configs.cfg")
+    configs_file = parser.parse_args().config_file
     monitoring = Monitoring()
     while True:
         with PerformaceTracker("got all urls"):
@@ -24,9 +30,10 @@ def main():
                 d = Quartz.CGSessionCopyCurrentDictionary()
                 if 'CGSSessionScreenIsLocked' not in d.keys():
                     #If screen is locked monitoring is not performed
-                    monitoring.monitor()
+                    monitoring.monitor(configs_file)
             except Exception as e:
                 log.info(e)
+                traceback.print_exc() 
         time.sleep(Constants.TICKER_TIME)
 
 if __name__ == "__main__":

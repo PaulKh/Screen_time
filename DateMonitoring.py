@@ -17,5 +17,5 @@ class DateMonitoring:
     def __str__(self):
         result = f"Date: {self.date}\n"
         for key, val in self.data.items():
-            result += f"{key} : {round(val)} secs"
+            result += f"{key} : {round(val) // 60} mins {round(val) % 60} secs\n"
         return result

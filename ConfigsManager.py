@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 import time
@@ -10,6 +11,7 @@ class ConfigsManager():
     __configs = {}
 
     def __init__(self, path_to_configs: str = CONFIGS_FILENAME):
+        log.debug(f"Loading configs from {path_to_configs}")
         with open(path_to_configs) as json_file:
             self.__configs = json.load(json_file)
 
@@ -23,10 +25,13 @@ class ConfigsManager():
     
     def is_full_release(self):
         if "full_release" in self.__configs: 
-            start = self.__configs["full_release"]["start"]
-            end = self.__configs["full_release"]["duration"] + start
-            now = time.time()
-            if now > start and now < end:
+            start_time = self.__configs["full_release"]["start"]
+            minutes_start_in_a_day = int(start_time[:-3]) * 60 + int(start_time[-2:])
+            duration_minutes = self.__configs["full_release"]["duration"]
+            now = datetime.now()
+            minutes_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds() / 60
+            if minutes_since_midnight > minutes_start_in_a_day and minutes_since_midnight < minutes_start_in_a_day + duration_minutes:
+                log.info("Full release is active")
                 return True
         return False        
 
@@ -40,7 +45,7 @@ class ConfigsManager():
         return False
     
     def get_blacklisted_url(self, url: str) -> Optional[dict]:
-        if "blacklist_urls" in self.__configs:
+        if "blacklist_urls" in self.__configs and url != None:
             for url_cfg in self.__configs["blacklist_urls"]:
                 if url_cfg["full_domain_name"] and url_cfg["url"] in url:
                     log.debug(f"Url domain {url} is in black list")
@@ -62,15 +67,16 @@ class ConfigsManager():
             return False
     
     def is_in_whitelisted_urls(self, url: str):
-        if "whilelist_urls" in self.__configs:
-            if any(white_url in url for white_url in self.__configs["whilelist_urls"]):
+        if "whitelist_urls" in self.__configs and url != None:
+            if any(white_url in url for white_url in self.__configs["whitelist_urls"]):
                 log.debug(f"Url {url} is in white list")
                 return True
         return False
     
     def is_in_whitelisted_names(self, title: str):
-        if "whilelist_names" in self.__configs:
-            if any(white_name in title for white_name in self.__configs["whilelist_names"]):
+        title_lower = title.lower()
+        if "whitelist_names" in self.__configs:
+            if any(white_name in title_lower for white_name in self.__configs["whitelist_names"]):
                 log.debug(f"Name {title} is in white list")
                 return True
         return False
